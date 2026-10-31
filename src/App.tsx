@@ -38,6 +38,7 @@ export const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null)
   const [is2FAVerified, setIs2FAVerified] = useState<boolean>(() => is2FASessionValid())
   const [authChecking, setAuthChecking] = useState(true)
+  const [kickoutError, setKickoutError] = useState<string | null>(null)
 
   // Section Navigation
   const [activeTab, setActiveTab] = useState<AdminActiveTab>('devices')
@@ -75,10 +76,12 @@ export const App: React.FC = () => {
           setUser(null)
           setIs2FAVerified(false)
           clear2FASession()
+          setKickoutError(`Access Denied: (${currentUser.email || 'Unknown'}) is unauthorized. Only lifet4542@gmail.com can access Cairn Admin.`)
           setAuthChecking(false)
           return
         }
         setUser(currentUser)
+        setKickoutError(null)
         const valid = is2FASessionValid(currentUser.email)
         setIs2FAVerified(valid)
       } else {
@@ -324,7 +327,11 @@ export const App: React.FC = () => {
       {!user || !is2FAVerified ? (
         <LoginModal 
           user={user} 
-          on2FAVerified={() => setIs2FAVerified(true)} 
+          kickoutError={kickoutError}
+          on2FAVerified={() => {
+            setKickoutError(null)
+            setIs2FAVerified(true)
+          }} 
         />
       ) : (
         <main className="main-content">

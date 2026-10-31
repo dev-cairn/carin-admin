@@ -17,12 +17,13 @@ export const AUTHORIZED_ADMIN_EMAIL = 'lifet4542@gmail.com'
 
 interface LoginModalProps {
   user: User | null
+  kickoutError?: string | null
   on2FAVerified: () => void
 }
 
-export const LoginModal: React.FC<LoginModalProps> = ({ user, on2FAVerified }) => {
+export const LoginModal: React.FC<LoginModalProps> = ({ user, kickoutError, on2FAVerified }) => {
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(kickoutError || null)
 
   // 2FA TOTP State
   const [totpCode, setTotpCode] = useState('')
@@ -38,11 +39,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({ user, on2FAVerified }) =
   // Format secret with spaces for easy reading (e.g., CAIR NBR OWS EAU TH)
   const formattedSecret = secret.match(/.{1,4}/g)?.join(' ') || secret
 
-  // Clear inputs when user state changes
+  // Sync kickout error or clear inputs when user state changes
   useEffect(() => {
     setTotpCode('')
-    setError(null)
-  }, [user])
+    if (kickoutError) {
+      setError(kickoutError)
+    } else {
+      setError(null)
+    }
+  }, [user, kickoutError])
 
   // Step 1: Direct Google Login
   const handleGoogleLogin = async () => {
