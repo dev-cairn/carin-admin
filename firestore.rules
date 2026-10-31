@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Theme Studio (Public read for all browsers, authenticated write for admin)
+    match /browser_theme/{themeId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 2. Browser Notices & What's New Broadcast
+    match /browser_notices/{noticeId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 3. Browser Device Installations (Heartbeat counter)
+    match /browser_installations/{deviceId} {
+      allow read, write: if true;
+    }
+
+    // 4. Feedback Submissions
+    match /feedback_submissions/{submissionId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // Default deny for unlisted collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
