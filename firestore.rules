@@ -2,16 +2,21 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Strict Admin Verifier: Only lifet4542@gmail.com is authorized
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email.lower() == 'lifet4542@gmail.com';
+    }
+
     // 1. Theme Studio (Public read for all browsers, authenticated write for admin)
     match /browser_theme/{themeId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // 2. Browser Notices & What's New Broadcast
     match /browser_notices/{noticeId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // 3. Browser Device Installations (Heartbeat counter)
@@ -19,10 +24,10 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // 4. Feedback Submissions
+    // 4. Feedback Submissions (Any user can submit, only lifet4542@gmail.com can manage)
     match /feedback_submissions/{submissionId} {
       allow create: if true;
-      allow read, update, delete: if request.auth != null;
+      allow read, update, delete: if isAdmin();
     }
 
     // Default deny for unlisted collections

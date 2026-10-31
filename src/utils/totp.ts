@@ -168,8 +168,10 @@ export function is2FASessionValid(userEmail?: string | null): boolean {
       return false
     }
 
-    // Ensure session matches active Google email if provided
-    if (userEmail && session.userEmail && session.userEmail.toLowerCase() !== userEmail.toLowerCase()) {
+    // Strict Admin Email Enforcement: only lifet4542@gmail.com is valid
+    const targetEmail = (userEmail || session.userEmail || '').trim().toLowerCase()
+    if (targetEmail !== 'lifet4542@gmail.com') {
+      clear2FASession()
       return false
     }
 

@@ -13,6 +13,8 @@ import {
   set2FASession 
 } from '../utils/totp'
 
+export const AUTHORIZED_ADMIN_EMAIL = 'lifet4542@gmail.com'
+
 interface LoginModalProps {
   user: User | null
   on2FAVerified: () => void
@@ -47,7 +49,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ user, on2FAVerified }) =
     setLoading(true)
     setError(null)
     try {
-      await signInWithPopup(auth, googleProvider)
+      const res = await signInWithPopup(auth, googleProvider)
+      const email = (res.user.email || '').trim().toLowerCase()
+      if (email !== AUTHORIZED_ADMIN_EMAIL) {
+        await signOut(auth)
+        setError(`Access Denied: (${res.user.email || 'Unknown'}) is not authorized. Only ${AUTHORIZED_ADMIN_EMAIL} can access Cairn Admin.`)
+        return
+      }
     } catch (err: any) {
       console.error('Google sign-in failure:', err)
       setError(err?.message || 'Google authentication failed.')
@@ -59,6 +67,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ user, on2FAVerified }) =
   // Step 2: Verify TOTP Code
   const handleVerify2FA = async (e: React.FormEvent) => {
     e.preventDefault()
+    const email = (user?.email || '').trim().toLowerCase()
+    if (!user || email !== AUTHORIZED_ADMIN_EMAIL) {
+      setError(`Access Denied: Account not authorized. Only ${AUTHORIZED_ADMIN_EMAIL} is permitted.`)
+      await signOut(auth)
+      return
+    }
+
     if (!totpCode || totpCode.trim().length !== 6) {
       setError('Please enter the 6-digit verification code from Google Authenticator.')
       return

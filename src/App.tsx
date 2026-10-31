@@ -3,6 +3,7 @@ import {
   auth, 
   db, 
   onAuthStateChanged, 
+  signOut,
   collection, 
   query, 
   onSnapshot, 
@@ -63,14 +64,25 @@ export const App: React.FC = () => {
   const [activeNotice, setActiveNotice] = useState<BrowserNotice | null>(null)
   const [loadingNotices, setLoadingNotices] = useState(true)
 
-  // 1. Auth state subscription with 7-Day 2FA validity check
+  // 1. Auth state subscription with 7-Day 2FA validity check & strict email restriction
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser)
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
+        const email = (currentUser.email || '').trim().toLowerCase()
+        if (email !== 'lifet4542@gmail.com') {
+          console.warn('[Cairn Admin] Unauthorized email attempt rejected:', email)
+          await signOut(auth)
+          setUser(null)
+          setIs2FAVerified(false)
+          clear2FASession()
+          setAuthChecking(false)
+          return
+        }
+        setUser(currentUser)
         const valid = is2FASessionValid(currentUser.email)
         setIs2FAVerified(valid)
       } else {
+        setUser(null)
         setIs2FAVerified(false)
         clear2FASession()
       }
